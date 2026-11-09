@@ -457,13 +457,22 @@ fn render_workers(app: &App, frame: &mut Frame, area: Rect) {
     let (headers, widths): (Vec<&str>, Vec<Constraint>) = if area.width >= 90 {
         (
             vec![
-                "", "IDENT", "IP", "AGENT", "JOBS", "CONNS", "UPTIME", "STATUS",
+                "",
+                "IDENT",
+                "IP",
+                "AGENT",
+                "UPDATE-CHECK",
+                "JOBS",
+                "CONNS",
+                "UPTIME",
+                "STATUS",
             ],
             vec![
                 Constraint::Length(2),
                 Constraint::Percentage(22),
                 Constraint::Percentage(18),
                 Constraint::Percentage(22),
+                Constraint::Percentage(10),
                 Constraint::Percentage(10),
                 Constraint::Percentage(8),
                 Constraint::Percentage(10),
@@ -543,6 +552,27 @@ fn render_workers(app: &App, frame: &mut Frame, area: Rect) {
         if area.width >= 90 {
             cells.push(Cell::from(Span::styled(
                 w.user_agent.as_deref().unwrap_or("-"),
+                Style::default().fg(Color::DarkGray),
+            )));
+        }
+
+        // turn w.last_updated (seconds) into human-readable time
+        // do not show if last_update_checked is 0
+        let last_update_checked = w.last_update_checked.unwrap_or(0 as u64);
+        if last_update_checked != 0 {
+            let last_update_checked =
+                chrono::Local::now().timestamp_millis() - last_update_checked as i64;
+            let last_update_checked = chrono::Duration::milliseconds(last_update_checked);
+            let last_update_checked = chrono::Local::now() - last_update_checked;
+            let last_update_checked = last_update_checked.to_string();
+
+            cells.push(Cell::from(Span::styled(
+                last_update_checked,
+                Style::default().fg(Color::DarkGray),
+            )));
+        } else {
+            cells.push(Cell::from(Span::styled(
+                "Never",
                 Style::default().fg(Color::DarkGray),
             )));
         }
